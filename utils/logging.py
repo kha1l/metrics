@@ -6,7 +6,7 @@ class Logger:
         self.logger = logging.getLogger(name)
         self.logger.setLevel(logging.DEBUG)
 
-        handler = logging.FileHandler('./config/logs.log')
+        handler = logging.FileHandler('./configuration/logs.log')
         handler.setLevel(logging.DEBUG)
 
         formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')

@@ -1,6 +1,7 @@
 from utils.logging import Logger
 import aiohttp
 from aiohttp.client_exceptions import ContentTypeError
+import asyncio
 
 
 """
@@ -19,6 +20,8 @@ class Connect:
     """
     async def dodo_api(self, url, access, **kwargs) -> dict:
         data = {}
+        retry_limit = 5
+        retry_delay = 60
         for key, value in kwargs.items():
             if key == '_from':
                 data['from'] = value
@@ -30,18 +33,21 @@ class Connect:
             "Authorization": f"Bearer {access}"
         }
         async with aiohttp.ClientSession(trust_env=True) as session:
-            async with session.get(url, headers=headers, params=data) as response:
-                try:
-                    if response.status == 200:
-                        response = await response.json()
-                        return response
-                    else:
-                        self.logger.error(f'{response.status}|{self.partner}|{self.stationary}|'
-                                          f'{url}|{response.content}')
+            for i in range(retry_limit):
+                async with session.get(url, headers=headers, params=data) as response:
+                    try:
+                        if response.status == 200:
+                            response = await response.json()
+                            return response
+                        elif response.status == 429:
+                            await asyncio.sleep(retry_delay)
+                        else:
+                            self.logger.error(f'{response.status}|{self.partner}|{self.stationary}|'
+                                              f'{url}|{response.content}')
+                            return {}
+                    except ContentTypeError as e:
+                        self.logger.error(f'{e}|{self.partner}|{self.stationary}|{url}')
                         return {}
-                except ContentTypeError as e:
-                    self.logger.error(f'{e}|{self.partner}|{self.stationary}|{url}')
-                    return {}
 
     """
         Получение данных из глобального dodo api, в качестве аргумента передать эндпоинт

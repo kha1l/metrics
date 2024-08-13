@@ -4,5 +4,8 @@
     2. type_metrics - тип метрик(день, неделя, месяц)
     3. date_start, date_end - даты начала и окончания периода
 """
-async def work_metrics(partner, type_metrics, date_start, date_end):
+import asyncio
+
+
+async def work_metrics(partner, date_start, date_end, **kwargs):
     pass
