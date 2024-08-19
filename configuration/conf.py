@@ -6,6 +6,13 @@ from functions.productivity import Productivity
 from functions.staffmeal import StaffMeal
 from functions.refusal import Refusal
 from functions.revenue import Revenue
+from functions.schedule import Schedule
+from functions.sales import Sales
+from functions.salary import Salary
+from functions.shifts import Shifts
+from functions.staff import Staff
+from functions.stops import Stops
+from functions.writeoffs import WriteOffs
 
 
 """
@@ -20,7 +27,9 @@ class Config:
 
 class Settings:
     functions = {
-        1: Delivery(), 3: Handover(),
-        4: StaffMeal(), 5: Productivity(),
-        7: Refusal(), 8: Revenue()
+        1: Delivery(), 2: Sales(), 3: Handover(),
+        4: StaffMeal(), 5: Productivity(), 6: '',
+        7: Refusal(), 8: Revenue(), 9: Salary(),
+        10: Schedule(), 11: Shifts(), 12: Staff(),
+        13: Stops(), 14: WriteOffs()
     }

@@ -20,8 +20,7 @@ class Productivity:
     async def productivity_app(self, data, date_start, date_end):
         conn = Connect(data['partner'], data['rest_name'])
         date_end = datetime.strftime(date_end + timedelta(days=1), '%Y-%m-%dT00:00:00')
-        response = await conn.dodo_api(f'https://api.dodois.{data["domain"]}/dodopizza/'
-                                       f'{data["code"]}/production/productivity',
+        response = await conn.dodo_api(f'https://api.dodois.{data["properties"]}/production/productivity',
                                        data["access"], units=data["units"], _from=date_start, to=date_end)
         try:
             productivity = response['productivityStatistics'][0]

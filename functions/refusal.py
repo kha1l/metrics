@@ -14,8 +14,7 @@ class Refusal:
         reach = False
         conn = Connect(data['partner'], data['rest_name'])
         while not reach:
-            response = await conn.dodo_api(f'https://api.dodois.{data["domain"]}/dodopizza'
-                                           f'/{data["code"]}/accounting/cancelled-sales',
+            response = await conn.dodo_api(f'https://api.dodois.{data["properties"]}/accounting/cancelled-sales',
                                            data["access"], units=data["units"], _from=date_start, to=date_end,
                                            skip=skip, take=take)
             skip += take

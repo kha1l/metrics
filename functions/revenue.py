@@ -20,10 +20,11 @@ class Revenue:
 
     async def revenue_app(self, data, date_start, date_end):
         conn = Connect(data['partner'], data['rest_name'])
+        properties = data["properties"]
         date_start = datetime.strptime(date_start, '%Y-%m-%dT%H:%M:%S').date()
         date_end = datetime.strptime(date_end, '%Y-%m-%dT%H:%M:%S').date()
         while date_start != date_end + timedelta(days=1):
-            link = f'https://publicapi.dodois.io/{data["code"]}/api/v1/unitinfo/' \
+            link = f'https://publicapi.dodois.io/{properties}/api/v1/unitinfo/' \
                    f'{data["short_id"]}/dailyrevenue/{date_start.year}/{date_start.month}/{date_start.day}'
             response = await conn.public_dodo_api(link)
             try:

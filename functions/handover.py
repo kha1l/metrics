@@ -29,8 +29,7 @@ class Handover:
         count_orders_stationary, count_orders_delivery = 0, 0
         amount_meet_stationary, amount_meet_delivery = 0, 0
         amount_assembly_stationary = 0
-        response = await conn.dodo_api(f'https://api.dodois.{data["domain"]}/dodopizza/'
-                                       f'{data["code"]}/production/orders-handover-time',
+        response = await conn.dodo_api(f'https://api.dodois.{data["properties"]}/production/orders-handover-time',
                                        data["access"], units=data["units"], _from=date_start, to=date_end)
         try:
             for order in response['ordersHandoverTime']:

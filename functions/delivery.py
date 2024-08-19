@@ -21,8 +21,7 @@ class Delivery:
 
     async def delivery_app(self, orders, data, dt_start, dt_end):
         conn = Connect(data['partner'], data['rest_name'])
-        response = await conn.dodo_api(f'https://api.dodois.{data["domain"]}/dodopizza/'
-                                       f'{data["country_code"]}/delivery/statistics/',
+        response = await conn.dodo_api(f'https://api.dodois.{data["properties"]}/delivery/statistics/',
                                        data['access'], units=data['units'], _from=dt_start, to=dt_end)
         try:
             delivery = response['unitsStatistics'][0]

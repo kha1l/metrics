@@ -16,8 +16,7 @@ class StaffMeal:
         start = f'{date.today() - timedelta(days=150)}T00:00:00'
         conn = Connect(data['partner'], data['rest_name'])
         while not reach:
-            response = await conn.dodo_api(f'https://api.dodois.{data["domain"]}/dodopizza/'
-                                           f'{data["code"]}/accounting/incoming-stock-items',
+            response = await conn.dodo_api(f'https://api.dodois.{data["properties"]}/accounting/incoming-stock-items',
                                            data["access"], units=data["units"], _from=start, to=date_end,
                                            skip=skip, take=take)
             skip += take
@@ -35,7 +34,7 @@ class StaffMeal:
         skip = 0
         take = 500
         while not reach_staff_meal:
-            response = await conn.dodo_api(f'https://api.dodois.{data["domain"]}/dodopizza/{data["code"]}/'
+            response = await conn.dodo_api(f'https://api.dodois.{data["properties"]}/'
                                            f'accounting/stock-consumptions-by-period',
                                            data["access"], units=data["units"], _from=date_start,
                                            to=date_end, skip=skip, take=take)

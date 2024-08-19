@@ -1,3 +1,7 @@
-*.log
-.env
-/venv/
+.venv/
+venv/
+.idea/
+ __pycache__/
+ .env
+ *.log
+*.py[cod]
