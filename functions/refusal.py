@@ -1,7 +1,11 @@
 from utils.logging import Logger
 from utils.connection import Connect
 
-
+'''
+    Набор метрик с эндпоинта отказы /accounting/cancelled-sales:
+    1. amount_refusal - сумма заказов
+    2. percent_refusal - процент отказов от выручки
+'''
 class Refusal:
     def __init__(self):
         self.logger = Logger('REFUSAL')

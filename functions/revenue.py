@@ -2,7 +2,20 @@ from utils.logging import Logger
 from utils.connection import Connect
 from datetime import datetime, timedelta
 
-
+'''
+    Набор метрик с глобал эндпоинта unitinfo/dailyrevenue/:
+    1. revenue - общая выручка
+    2. orders - общее количество заказов
+    3. revenue_stationary - выручка ресторана
+    4. revenue_delivery - выручка на доставку
+    5. orders_stationary - количество заказов в ресторане
+    6. orders_delivery - количество заказов на доставку
+    7. orders_pickup - количество заказов самовывоз
+    8. revenue_pickup - выручка самовывоз
+    9. revenue_mobile_app - выручка из мобильного приложения
+    10. orders_mobile_app - количество заказов из мобильного приложения
+    11. percent_mobile_app - процент заказов из мобильного приложения
+'''
 class Revenue:
     def __init__(self):
         self.logger = Logger('REVENUE')

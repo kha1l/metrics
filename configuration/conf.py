@@ -13,6 +13,8 @@ from functions.shifts import Shifts
 from functions.staff import Staff
 from functions.stops import Stops
 from functions.writeoffs import WriteOffs
+from functions.rating import Rating
+from functions.couriersorders import CouriersOrders
 
 
 """
@@ -25,11 +27,14 @@ class Config:
     password = os.getenv('PASSWORD')
     host = os.getenv('IP')
 
+'''
+    Классы групп метрик словарь functions
+'''
 class Settings:
     functions = {
         1: Delivery(), 2: Sales(), 3: Handover(),
-        4: StaffMeal(), 5: Productivity(), 6: '',
+        4: StaffMeal(), 5: Productivity(), 6: Rating(),
         7: Refusal(), 8: Revenue(), 9: Salary(),
         10: Schedule(), 11: Shifts(), 12: Staff(),
-        13: Stops(), 14: WriteOffs()
+        13: Stops(), 14: WriteOffs(), 15: CouriersOrders()
     }

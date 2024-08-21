@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
     Набор метрик с эндпоинта производительность /production/productivity:
     1. productivity_kitchen - производительность кухни
     2. productivity_product - продуктов в час
-    3. productivity_couriers - производительность курьеровntktuhfv
+    3. productivity_couriers - производительность курьеров
     4. quantity_work_hours - количество отработанных часов кухня
 '''
 class Productivity:
