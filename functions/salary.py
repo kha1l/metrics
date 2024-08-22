@@ -2,6 +2,19 @@ from utils.logging import Logger
 from utils.connection import Connect
 
 
+'''
+    Набор метрик с эндпоинта вознаграждения /staff/incentives-by-members:
+    1. salary_kitchen - зарплата кухни
+    2. salary_couriers - зарплата курьера
+    3. salary_trainee - зарплата стажеров
+    4. award_kitchen - премии кухни
+    5. award_couriers - премии курьеров
+    6. kitchencost - процент зарплаты кухни от выручки
+    7. deliverycost - процент зарплаты курьеров от выручки доставки
+    8. laborcost - процент зарплаты курьеров и кухни от выручки
+    9. cost_one_delivery - стоимость одной доставки
+    10. salary_staff - зарплата курьеров и кухни
+'''
 class Salary:
     def __init__(self):
         self.salary_kitchen = 0
@@ -16,10 +29,10 @@ class Salary:
         self.salary_staff = 0
         self.logger = Logger('SALARY')
 
-    async def salary_app(self, revenue, revenue_delivery, orders, data, date_start, date_end):
-        conn = Connect(data['partner'], data['rest_name'])
+    async def app(self, revenue, revenue_delivery, orders_delivery, data, date_start, date_end):
+        conn = Connect(data['partner_id'], data['name'])
         response = await conn.dodo_api(f'https://api.dodois.{data["properties"]}/staff/incentives-by-members',
-                                       data["access"], units=data["units"],
+                                       data["access"], units=data["uuid"],
                                        _from=date_start, to=date_end)
         try:
             for salary in response['staffMembers']:
@@ -47,7 +60,7 @@ class Salary:
                         if position.startswith('Стажер-') and position != 'Стажер-менеджер':
                             self.salary_trainee += prem['amount']
         except Exception as e:
-            self.logger.error(f'{e} | {data["partner"]} | {data["rest_name"]}')
+            self.logger.error(f'{e} | {data["partner_id"]} | {data["name"]}')
         try:
             self.kitchencost = round(self.salary_kitchen * data['tax'] / revenue * 100, 2)
         except ZeroDivisionError:
@@ -64,10 +77,10 @@ class Salary:
         except ZeroDivisionError:
             self.laborcost = 0
         try:
-            self.cost_one_delivery = round(self.salary_couriers / orders, 0)
+            self.cost_one_delivery = round(self.salary_couriers / orders_delivery, 0)
         except ZeroDivisionError:
             self.cost_one_delivery = 0
         self.award_couriers = round(self.award_couriers, 0)
         self.award_kitchen = round(self.award_kitchen, 0)
         self.salary_trainee = round(self.salary_trainee, 0)
-        self.logger.info(f'{data["partner"]} | {data["rest_name"]} | OK')
+        self.logger.info(f'{data["partner_id"]} | {data["name"]} | OK')

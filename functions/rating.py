@@ -15,16 +15,20 @@ class Rating:
         self.customer_rating_stationary = 0
         self.customer_rating_delivery = 0
         self.quantity_grade_stationary = 0
-        self.quantity_grade_stationary = 0
+        self.quantity_grade_delivery = 0
 
-    async def rating_app(self, data, date_start, date_end):
-        conn = Connect(data['partner'], data['rest_name'])
-        properties = data["properties"]
-        date_start_format = datetime.strftime(date_start, '%Y-%m-%d')
-        date_end_format = datetime.strftime(date_end, '%Y-%m-%d')
-        response = await conn.dodo_api(f'https://api.dodois.{properties}/customer-feedback/customer-ratings',
-                                       data["access"], units=data["units"],
-                                       _from=date_start_format, to=date_end_format)
+    async def app(self, data, date_start, date_end):
+        conn = Connect(data['partner_id'], data['name'])
+        properties = data["properties"].split('/')
+        date_start_format = date_start.split('T')[0]
+        date_end_format = date_end.split('T')[0]
+        start_date_format = date_start_format.split('-')
+        end_date_format = date_end_format.split('-')
+        start_date = f'{start_date_format[2]}.{start_date_format[1]}.{start_date_format[0]}'
+        end_date = f'{end_date_format[2]}.{end_date_format[1]}.{end_date_format[0]}'
+        response = await conn.dodo_api(f'https://api.dodois.{properties[0]}/customer-feedback/customer-ratings',
+                                       data["access"], units=data["uuid"],
+                                       _from=start_date, to=end_date)
         try:
             rating = response['customerRatings'][0]
             self.customer_rating_stationary = rating['avgDineInOrderRate']
@@ -32,4 +36,4 @@ class Rating:
             self.quantity_grade_stationary = rating['dineInRateCount']
             self.quantity_grade_delivery = rating['deliveryRateCount']
         except Exception as e:
-            self.logger.error(f'{e} | {data["partner"]} | {data["rest_name"]}')
+            self.logger.error(f'{e} | {data["partner_id"]} | {data["name"]}')

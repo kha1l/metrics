@@ -21,3 +21,23 @@ class Database:
                     await connection.execute(sql, *parameters)
         await pool.close()
         return data
+
+    async def get_partner_data(self, partner, **kwargs):
+        if kwargs:
+            units = ','.join(f"'{unit}'" for unit in kwargs['units'])
+            sql = f'''
+                SELECT t.access, r.name, r.uuid, r.short_id, r.properties, r.tax, r.timezone, t.partner_id 
+                FROM tokens t 
+                JOIN stationary r ON t.partner_id = r.partner_id
+                WHERE t.partner_id = $1 AND r.uuid IN ({units});
+            '''
+            params = (partner,)
+        else:
+            sql = '''
+                SELECT t.access, r.name, r.uuid, r.short_id, r.properties, r.tax, r.timezone, t.partner_id 
+                FROM tokens t 
+                JOIN stationary r ON t.partner_id = r.partner_id 
+                WHERE t.partner_id = $1;
+            '''
+            params = (partner,)
+        return await self.execute(sql, parameters=params, fetchall=True)

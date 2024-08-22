@@ -18,7 +18,6 @@ from datetime import datetime, timedelta
 '''
 class Revenue:
     def __init__(self):
-        self.logger = Logger('REVENUE')
         self.revenue = 0
         self.orders = 0
         self.revenue_stationary = 0
@@ -30,14 +29,23 @@ class Revenue:
         self.revenue_mobile_app = 0
         self.orders_mobile_app = 0
         self.percent_mobile_app = 0
+        self.logger = Logger('REVENUE')
 
-    async def revenue_app(self, data, date_start, date_end):
-        conn = Connect(data['partner'], data['rest_name'])
-        properties = data["properties"]
+    async def reset(self):
+        self.__init__()
+
+    async def app(self, data, date_start, date_end):
+        conn = Connect(data['partner_id'], data['name'])
+        properties = data["properties"].split('/')
+        concept = properties[1]
+        if concept == 'dodopizza':
+            concept = ''
+        else:
+            concept += '.'
         date_start = datetime.strptime(date_start, '%Y-%m-%dT%H:%M:%S').date()
         date_end = datetime.strptime(date_end, '%Y-%m-%dT%H:%M:%S').date()
         while date_start != date_end + timedelta(days=1):
-            link = f'https://publicapi.dodois.io/{properties}/api/v1/unitinfo/' \
+            link = f'https://publicapi.{concept}dodois.io/{properties[-1]}/api/v1/unitinfo/' \
                    f'{data["short_id"]}/dailyrevenue/{date_start.year}/{date_start.month}/{date_start.day}'
             response = await conn.public_dodo_api(link)
             try:
@@ -53,11 +61,11 @@ class Revenue:
                 self.revenue_mobile_app += int(rev['StationaryMobileRevenue'])
                 self.orders_mobile_app += int(rev['StationaryMobileCount'])
             except Exception as e:
-                self.logger.error(f'{e} | {data["partner"]} | {data["rest_name"]}')
+                self.logger.error(f'{e} | {data["partner_id"]} | {data["name"]}')
             date_start += timedelta(days=1)
         try:
             self.percent_mobile_app += round(self.orders_mobile_app / self.orders_stationary * 100, 2)
         except ZeroDivisionError as e:
             self.percent_mobile_app += 0
-            self.logger.error(f'{e} | {data["partner"]} | {data["rest_name"]}')
-        self.logger.info(f'{data["partner"]} | {data["rest_name"]} | OK')
+            self.logger.error(f'{e} | {data["partner_id"]} | {data["name"]}')
+        self.logger.info(f'{data["partner_id"]} | {data["name"]} | OK')

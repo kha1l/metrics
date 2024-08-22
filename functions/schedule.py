@@ -12,14 +12,15 @@ class Schedule:
         self.schedule_work_hours = 0
         self.logger = Logger('SCHEDULE')
 
-    async def schedule_app(self, data, date_start, date_end):
+    async def app(self, data, date_start, date_end):
         total_hours = timedelta(0)
         skip = 0
         take = 500
-        conn = Connect(data['partner'], data['rest_name'])
+        conn = Connect(data['partner_id'], data['name'])
         reach = False
         while not reach:
-            response = await conn.dodo_api(f'https://api.dodois.{data["properties"]}/staff/schedules', data["access"], units=data["units"],
+            response = await conn.dodo_api(f'https://api.dodois.{data["properties"]}/staff/schedules',
+                                           data["access"], units=data["uuid"],
                                            beginFrom=date_start, beginTo=date_end, skip=skip, take=take)
             skip += take
             try:
@@ -32,12 +33,12 @@ class Schedule:
                         scheduled_end_format = datetime.strptime(scheduled_end_at, '%Y-%m-%dT%H:%M:%S')
                         total_hours += scheduled_end_format - scheduled_start_format
             except Exception as e:
-                self.logger.error(f'{e} | {data["partner"]} | {data["rest_name"]}')
+                self.logger.error(f'{e} | {data["partner_id"]} | {data["name"]}')
             try:
                 if response['isEndOfListReached']:
                     reach = True
             except Exception as e:
                 reach = True
-                self.logger.error(f'{e} | {data["partner"]} | {data["rest_name"]}')
+                self.logger.error(f'{e} | {data["partner_id"]} | {data["name"]}')
         self.schedule_work_hours = total_hours.days * 24 + total_hours.seconds / 3600
-        self.logger.info(f'{data["partner"]} | {data["rest_name"]} | OK')
+        self.logger.info(f'{data["partner_id"]} | {data["name"]} | OK')

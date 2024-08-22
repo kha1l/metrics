@@ -3,6 +3,15 @@ from utils.connection import Connect
 from datetime import datetime
 
 
+'''
+    Набор метрик с эндпоинта список сотрудников /staff/members:
+    1. quantity_couriers - количество курьеров
+    2. quantity_kitchen - количество персонала кухни
+    3. employed_couriers - количество принятых курьеров
+    4. employed_kitchen - количество принятых на кухню
+    5. dismissed_couriers - уволенные курьеры
+    6. dismissed_kitchen - уволенные кухня
+'''
 class Staff:
     def __init__(self):
         self.quantity_couriers = 0
@@ -13,12 +22,12 @@ class Staff:
         self.dismissed_kitchen = 0
         self.logger = Logger('STAFF')
 
-    async def staff_app(self, data, date_start, date_end):
-        conn = Connect(data['partner'], data['rest_name'])
+    async def app(self, data, date_start, date_end):
+        conn = Connect(data['partner_id'], data['name'])
         datetime_start = datetime.strptime(date_start, "%Y-%m-%dT%H:%M:%S")
         datetime_end = datetime.strptime(date_end, "%Y-%m-%dT%H:%M:%S")
         response = await conn.dodo_api(f'https://api.dodois.{data["properties"]}/staff/members',
-                                       data['access'], units=data['units'], statuses='Active', take=900)
+                                       data['access'], units=data['uuid'], statuses='Active', take=900)
         try:
             for person in response['members']:
                 if person['staffType'] == 'Courier':
@@ -26,9 +35,9 @@ class Staff:
                 else:
                     self.quantity_kitchen += 1
         except Exception as e:
-            self.logger.error(f'{e} | {data["partner"]} | {data["rest_name"]}')
+            self.logger.error(f'{e} | {data["partner_id"]} | {data["name"]}')
         response_hired = await conn.dodo_api(f'https://api.dodois.{data["properties"]}/staff/members',
-                                             data['access'], units=data['units'], hiredOn=date_start,
+                                             data['access'], units=data['uuid'], hiredOn=date_start,
                                              hiredTo=date_end, take=900)
         try:
             for person_hired in response_hired['members']:
@@ -40,9 +49,9 @@ class Staff:
                         else:
                             self.employed_kitchen += 1
         except Exception as e:
-            self.logger.error(f'{e} | {data["partner"]} | {data["rest_name"]}')
+            self.logger.error(f'{e} | {data["partner_id"]} | {data["name"]}')
         response_dismissed = await conn.dodo_api(f'https://api.dodois.{data["properties"]}/staff/members',
-                                                 data['access'], units=data['units'], dismissedFrom=date_start,
+                                                 data['access'], units=data['uuid'], dismissedFrom=date_start,
                                                  dismissedTo=date_end, statuses='Dismissed', take=900)
         try:
             for person_diss in response_dismissed['members']:
@@ -52,5 +61,5 @@ class Staff:
                     else:
                         self.dismissed_kitchen += 1
         except Exception as e:
-            self.logger.error(f'{e} | {data["partner"]} | {data["rest_name"]}')
-        self.logger.info(f'{data["partner"]} | {data["rest_name"]} | OK')
+            self.logger.error(f'{e} | {data["partner_id"]} | {data["name"]}')
+        self.logger.info(f'{data["partner_id"]} | {data["name"]} | OK')

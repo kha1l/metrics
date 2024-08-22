@@ -22,19 +22,19 @@ from functions.couriersorders import CouriersOrders
 """
 class Config:
     load_dotenv()
-    dbase = os.getenv('DATA_BASE')
-    user = os.getenv('USER_NAME')
+    dbase = os.getenv('DBASE')
+    user = os.getenv('USER')
     password = os.getenv('PASSWORD')
-    host = os.getenv('IP')
+    host = os.getenv('HOST')
 
 '''
     Классы групп метрик словарь functions
 '''
 class Settings:
-    functions = {
-        1: Delivery(), 2: Sales(), 3: Handover(),
+    groups = {
+        1: Revenue(), 2: Schedule(), 3: Handover(),
         4: StaffMeal(), 5: Productivity(), 6: Rating(),
-        7: Refusal(), 8: Revenue(), 9: Salary(),
-        10: Schedule(), 11: Shifts(), 12: Staff(),
+        7: Refusal(), 8: Delivery(), 9: Salary(),
+        10: Sales(), 11: Shifts(), 12: Staff(),
         13: Stops(), 14: WriteOffs(), 15: CouriersOrders()
     }

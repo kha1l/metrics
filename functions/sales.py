@@ -2,6 +2,27 @@ from utils.logging import Logger
 from utils.connection import Connect
 
 
+'''
+    Набор метрик с эндпоинта продажи /accounting/sales:
+    1. general_discount - общий дисконт
+    2. application_certificate_kitchen - применение сертификатов за опоздание кухни
+    3. discount_personal - дисконт по скидке 50%
+    4. discount_staff - дисконт по сотрудникам общий
+    5. discount_couriers - дисконт по скидке 49%
+    6. discount_lunch - дисконт по скидке 60%
+    7. discount_combo - дисконт комбо наборов
+    8. discount_certificates - дисконт по сертификатам за опоздания на доставку
+    9. discount_cvm - дисконт CVM
+    10. discount_pickup - дисконт самовывоз
+    11. discount_stationary - дисконт продаж в ресторане
+    12. discount_delivery - дисконт продаж на доставку
+    13. application_certificate_courier - количество применений сертов на опоздания на доставку
+    14. percent_sales_ingredient - процент проданых доп ингредиентов
+    15. amount_sales_ingredients - сумма проданных ингредиентов
+    16. amount_certificate_kitchen - упущенная выручка из за опозданий кухни
+    17. kiosk_orders - количество заказов через киоск
+    18. percent_kiosk_orders - процент заказов через киоск от общего числа заказов в рест
+'''
 class Sales:
     def __init__(self):
         self.general_discount = 0
@@ -38,8 +59,8 @@ class Sales:
         price += product['price']
         return disc, price
 
-    async def sales_app(self, data, date_start, date_end):
-        conn = Connect(data['partner'], data['rest_name'])
+    async def app(self, data, date_start, date_end):
+        conn = Connect(data['partner_id'], data['name'])
         skip = 0
         take = 500
         count_orders_kiosk = 0
@@ -68,7 +89,7 @@ class Sales:
         reach = False
         while not reach:
             response = await conn.dodo_api(f'https://api.dodois.{data["properties"]}/accounting/sales',
-                                           data['access'], units=data['units'],
+                                           data['access'], units=data['uuid'],
                                            _from=date_start, to=date_end,
                                            skip=skip, take=take)
             skip += take
@@ -144,13 +165,13 @@ class Sales:
                         else:
                             without_discount_combo += product['price']
             except Exception as e:
-                self.logger.error(f'{e} | {data["partner"]} | {data["rest_name"]}')
+                self.logger.error(f'{e} | {data["partner_id"]} | {data["name"]}')
             try:
                 if response['isEndOfListReached']:
                     reach = True
             except Exception as e:
                 reach = True
-                self.logger.error(f'{e} | {data["partner"]} | {data["rest_name"]}')
+                self.logger.error(f'{e} | {data["partner_id"]} | {data["name"]}')
         self.discount_cvm = self.app_percent(discount_cvm + without_discount_cvm,
                                              price_cvm + without_discount_cvm)
         self.discount_combo = self.app_percent(discount_combo + without_discount_combo,
@@ -172,4 +193,4 @@ class Sales:
             self.percent_sales_ingredient = round(self.amount_sales_ingredients / mobile_price * 100, 2)
         except ZeroDivisionError:
             self.percent_sales_ingredient = 0
-        self.logger.info(f'{data["partner"]} | {data["rest_name"]} | OK')
+        self.logger.info(f'{data["partner_id"]} | {data["name"]} | OK')

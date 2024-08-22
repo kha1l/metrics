@@ -19,10 +19,10 @@ class Delivery:
         self.percent_late_delivery = 0
         self.logger = Logger('DELIVERY')
 
-    async def delivery_app(self, orders, data, dt_start, dt_end):
-        conn = Connect(data['partner'], data['rest_name'])
+    async def app(self, orders_delivery, data, dt_start, dt_end):
+        conn = Connect(data['partner_id'], data['name'])
         response = await conn.dodo_api(f'https://api.dodois.{data["properties"]}/delivery/statistics/',
-                                       data['access'], units=data['units'], _from=dt_start, to=dt_end)
+                                       data['access'], units=data['uuid'], _from=dt_start, to=dt_end)
         try:
             delivery = response['unitsStatistics'][0]
             self.average_delivery_speed = timedelta(seconds=delivery['avgDeliveryOrderFulfillmentTime'])
@@ -30,9 +30,9 @@ class Delivery:
             self.certificates = delivery['lateOrdersCount']
             try:
                 self.couriers_workload = round((delivery['tripsDuration'] / delivery['couriersShiftsDuration']), 2)
-                self.percent_late_delivery = round(delivery['lateOrdersCount'] / orders * 100, 2)
+                self.percent_late_delivery = round(delivery['lateOrdersCount'] / orders_delivery * 100, 2)
             except ZeroDivisionError as e:
-                self.logger.error(f'{e} | {data["partner"]} | {data["rest_name"]}')
-            self.logger.info(f'{data["partner"]} | {data["rest_name"]} | OK')
+                self.logger.error(f'{e} | {data["partner_id"]} | {data["name"]}')
+            self.logger.info(f'{data["partner_id"]} | {data["name"]} | OK')
         except Exception as e:
-            self.logger.error(f'{e} | {data["partner"]} | {data["rest_name"]}')
+            self.logger.error(f'{e} | {data["partner_id"]} | {data["name"]}')

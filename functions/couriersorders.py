@@ -19,7 +19,7 @@ class CouriersOrders:
         self.percent_three_more_delivery = 0
         self.logger = Logger('COURIERSORDERS')
 
-    async def couriers_orders_app(self, delivery_orders, stationary_orders, data, date_start, date_end):
+    async def app(self, delivery_orders, stationary_orders, data, date_start, date_end):
         skip = 0
         take = 500
         count_delivery_later = 0
@@ -27,11 +27,11 @@ class CouriersOrders:
         count_two_delivery = 0
         count_stationary_later = 0
         handover_orders = {}
-        conn = Connect(data['partner'], data['rest_name'])
+        conn = Connect(data['partner_id'], data['name'])
         reach = False
         response_handover = await conn.dodo_api(f'https://api.dodois.{data["properties"]}'
                                                 f'/production/orders-handover-time', data['access'],
-                                                units=data['units'], _from=date_start, to=date_end)
+                                                units=data['uuid'], _from=date_start, to=date_end)
         try:
             for times in response_handover['ordersHandoverTime']:
                 if times['salesChannel'] == 'Delivery':
@@ -42,11 +42,11 @@ class CouriersOrders:
                     if time_stationary > 900:
                         count_stationary_later += 1
         except Exception as e:
-            self.logger.error(f'{e} | {data["partner"]} | {data["rest_name"]}')
+            self.logger.error(f'{e} | {data["partner_id"]} | {data["name"]}')
         while not reach:
             response_orders = await conn.dodo_api(f'https://api.dodois.{data["properties"]}'
                                                   f'/delivery/couriers-orders', data['access'],
-                                                  units=data['units'], _from=date_start, to=date_end,
+                                                  units=data['uuid'], _from=date_start, to=date_end,
                                                   skip=skip, take=take)
 
             skip += take
@@ -64,12 +64,12 @@ class CouriersOrders:
                         count_delivery_later += 1
             except Exception as e:
                 reach = True
-                self.logger.error(f'{e} | {data["partner"]} | {data["rest_name"]}')
+                self.logger.error(f'{e} | {data["partner_id"]} | {data["name"]}')
             try:
                 if response_orders['isEndOfListReached']:
                     reach = True
             except Exception as e:
-                self.logger.error(f'{e} | {data["partner"]} | {data["rest_name"]}')
+                self.logger.error(f'{e} | {data["partner_id"]} | {data["name"]}')
                 reach = True
         try:
             self.percent_long_orders_delivery = round(count_delivery_later / delivery_orders * 100, 2)
@@ -92,4 +92,4 @@ class CouriersOrders:
             self.percent_three_more_delivery = 1 - self.percent_two_delivery - self.percent_one_delivery
         except ZeroDivisionError:
             self.percent_three_more_delivery = 0
-        self.logger.info(f'{data["partner"]} | {data["rest_name"]} | OK')
+        self.logger.info(f'{data["partner_id"]} | {data["name"]} | OK')
