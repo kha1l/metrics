@@ -31,9 +31,6 @@ class Revenue:
         self.percent_mobile_app = 0
         self.logger = Logger('REVENUE')
 
-    async def reset(self):
-        self.__init__()
-
     async def app(self, data, date_start, date_end):
         conn = Connect(data['partner_id'], data['name'])
         properties = data["properties"].split('/')

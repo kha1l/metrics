@@ -13,6 +13,7 @@ from functions.handover import Handover
 from functions.salary import Salary
 from functions.shifts import Shifts
 from functions.couriersorders import CouriersOrders
+from copy import copy
 
 
 async def work_metrics(partner, date_start, date_end, **kwargs):
@@ -30,6 +31,7 @@ async def work_metrics(partner, date_start, date_end, **kwargs):
         objects_dict = {}
         for group in partner_groups:
             metrics_group = stg.groups[group]
+            metrics_group.__init__()
             if isinstance(metrics_group, Delivery):
                 orders_delivery = objects_dict[1].orders_delivery
                 await metrics_group.app(orders_delivery, data, date_start, date_end)
@@ -53,7 +55,7 @@ async def work_metrics(partner, date_start, date_end, **kwargs):
                 await metrics_group.app(orders_delivery, orders_stationary, data, date_start, date_end)
             else:
                 await metrics_group.app(data, date_start, date_end)
-            objects_dict[group] = metrics_group
-            await metrics_group.reset()
+            copy_object = copy(metrics_group)
+            objects_dict[group] = copy_object
         units_metrics[data['uuid']] = objects_dict
     return units_metrics
