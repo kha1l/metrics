@@ -27,6 +27,7 @@ class Config:
     password = os.getenv('PASSWORD')
     host = os.getenv('HOST')
 
+
 '''
     Классы групп метрик словарь functions
 '''

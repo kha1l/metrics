@@ -1,5 +1,6 @@
 from utils.logging import Logger
 from utils.connection import Connect
+from utils.classes import BaseGroup
 
 
 '''
@@ -10,7 +11,7 @@ from utils.connection import Connect
     4. percent_two_delivery - процент поездок с двумя заказами
     5. percent_three_more_delivery - процент поездок с тремя и более заказами
 '''
-class CouriersOrders:
+class CouriersOrders(BaseGroup):
     def __init__(self):
         self.percent_long_orders_delivery = 0
         self.percent_long_orders_stationary = 0
@@ -19,7 +20,7 @@ class CouriersOrders:
         self.percent_three_more_delivery = 0
         self.logger = Logger('COURIERSORDERS')
 
-    async def app(self, delivery_orders, stationary_orders, data, date_start, date_end):
+    async def app(self, delivery_orders, stationary_orders):
         skip = 0
         take = 500
         count_delivery_later = 0
@@ -27,11 +28,11 @@ class CouriersOrders:
         count_two_delivery = 0
         count_stationary_later = 0
         handover_orders = {}
-        conn = Connect(data['partner_id'], data['name'])
+        conn = Connect(self.data['partner_id'], self.data['name'])
         reach = False
-        response_handover = await conn.dodo_api(f'https://api.dodois.{data["properties"]}'
-                                                f'/production/orders-handover-time', data['access'],
-                                                units=data['uuid'], _from=date_start, to=date_end)
+        response_handover = await conn.dodo_api(f'https://api.dodois.{self.data["properties"]}'
+                                                f'/production/orders-handover-time', self.data['access'],
+                                                units=self.data['uuid'], _from=self.date_start, to=self.date_end)
         try:
             for times in response_handover['ordersHandoverTime']:
                 if times['salesChannel'] == 'Delivery':
@@ -42,11 +43,11 @@ class CouriersOrders:
                     if time_stationary > 900:
                         count_stationary_later += 1
         except Exception as e:
-            self.logger.error(f'{e} | {data["partner_id"]} | {data["name"]}')
+            self.logger.error(f'{e} | {self.data["partner_id"]} | {self.data["name"]}')
         while not reach:
-            response_orders = await conn.dodo_api(f'https://api.dodois.{data["properties"]}'
-                                                  f'/delivery/couriers-orders', data['access'],
-                                                  units=data['uuid'], _from=date_start, to=date_end,
+            response_orders = await conn.dodo_api(f'https://api.dodois.{self.data["properties"]}'
+                                                  f'/delivery/couriers-orders', self.data['access'],
+                                                  units=self.data['uuid'], _from=self.date_start, to=self.date_end,
                                                   skip=skip, take=take)
 
             skip += take
@@ -64,12 +65,12 @@ class CouriersOrders:
                         count_delivery_later += 1
             except Exception as e:
                 reach = True
-                self.logger.error(f'{e} | {data["partner_id"]} | {data["name"]}')
+                self.logger.error(f'{e} | {self.data["partner_id"]} | {self.data["name"]}')
             try:
                 if response_orders['isEndOfListReached']:
                     reach = True
             except Exception as e:
-                self.logger.error(f'{e} | {data["partner_id"]} | {data["name"]}')
+                self.logger.error(f'{e} | {self.data["partner_id"]} | {self.data["name"]}')
                 reach = True
         try:
             self.percent_long_orders_delivery = round(count_delivery_later / delivery_orders * 100, 2)
@@ -92,4 +93,4 @@ class CouriersOrders:
             self.percent_three_more_delivery = 1 - self.percent_two_delivery - self.percent_one_delivery
         except ZeroDivisionError:
             self.percent_three_more_delivery = 0
-        self.logger.info(f'{data["partner_id"]} | {data["name"]} | OK')
+        self.logger.info(f'{self.data["partner_id"]} | {self.data["name"]} | OK')

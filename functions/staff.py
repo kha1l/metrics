@@ -1,6 +1,7 @@
 from utils.logging import Logger
 from utils.connection import Connect
 from datetime import datetime
+from utils.classes import BaseGroup
 
 
 '''
@@ -12,7 +13,7 @@ from datetime import datetime
     5. dismissed_couriers - уволенные курьеры
     6. dismissed_kitchen - уволенные кухня
 '''
-class Staff:
+class Staff(BaseGroup):
     def __init__(self):
         self.quantity_couriers = 0
         self.quantity_kitchen = 0
@@ -22,12 +23,12 @@ class Staff:
         self.dismissed_kitchen = 0
         self.logger = Logger('STAFF')
 
-    async def app(self, data, date_start, date_end):
-        conn = Connect(data['partner_id'], data['name'])
-        datetime_start = datetime.strptime(date_start, "%Y-%m-%dT%H:%M:%S")
-        datetime_end = datetime.strptime(date_end, "%Y-%m-%dT%H:%M:%S")
-        response = await conn.dodo_api(f'https://api.dodois.{data["properties"]}/staff/members',
-                                       data['access'], units=data['uuid'], statuses='Active', take=900)
+    async def app(self):
+        conn = Connect(self.data['partner_id'], self.data['name'])
+        datetime_start = datetime.strptime(self.date_start, "%Y-%m-%dT%H:%M:%S")
+        datetime_end = datetime.strptime(self.date_end, "%Y-%m-%dT%H:%M:%S")
+        response = await conn.dodo_api(f'https://api.dodois.{self.data["properties"]}/staff/members',
+                                       self.data['access'], units=self.data['uuid'], statuses='Active', take=900)
         try:
             for person in response['members']:
                 if person['staffType'] == 'Courier':
@@ -35,10 +36,10 @@ class Staff:
                 else:
                     self.quantity_kitchen += 1
         except Exception as e:
-            self.logger.error(f'{e} | {data["partner_id"]} | {data["name"]}')
-        response_hired = await conn.dodo_api(f'https://api.dodois.{data["properties"]}/staff/members',
-                                             data['access'], units=data['uuid'], hiredOn=date_start,
-                                             hiredTo=date_end, take=900)
+            self.logger.error(f'{e} | {self.data["partner_id"]} | {self.data["name"]}')
+        response_hired = await conn.dodo_api(f'https://api.dodois.{self.data["properties"]}/staff/members',
+                                             self.data['access'], units=self.data['uuid'], hiredOn=self.date_start,
+                                             hiredTo=self.date_end, take=900)
         try:
             for person_hired in response_hired['members']:
                 if person_hired['positionName'] != 'Управляющий':
@@ -49,10 +50,11 @@ class Staff:
                         else:
                             self.employed_kitchen += 1
         except Exception as e:
-            self.logger.error(f'{e} | {data["partner_id"]} | {data["name"]}')
-        response_dismissed = await conn.dodo_api(f'https://api.dodois.{data["properties"]}/staff/members',
-                                                 data['access'], units=data['uuid'], dismissedFrom=date_start,
-                                                 dismissedTo=date_end, statuses='Dismissed', take=900)
+            self.logger.error(f'{e} | {self.data["partner_id"]} | {self.data["name"]}')
+        response_dismissed = await conn.dodo_api(f'https://api.dodois.{self.data["properties"]}/staff/members',
+                                                 self.data['access'], units=self.data['uuid'],
+                                                 dismissedFrom=self.date_start, dismissedTo=self.date_end,
+                                                 statuses='Dismissed', take=900)
         try:
             for person_diss in response_dismissed['members']:
                 if person_diss['positionName'] != 'Управляющий':
@@ -61,5 +63,5 @@ class Staff:
                     else:
                         self.dismissed_kitchen += 1
         except Exception as e:
-            self.logger.error(f'{e} | {data["partner_id"]} | {data["name"]}')
-        self.logger.info(f'{data["partner_id"]} | {data["name"]} | OK')
+            self.logger.error(f'{e} | {self.data["partner_id"]} | {self.data["name"]}')
+        self.logger.info(f'{self.data["partner_id"]} | {self.data["name"]} | OK')

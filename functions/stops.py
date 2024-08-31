@@ -1,6 +1,7 @@
 from utils.logging import Logger
 from utils.connection import Connect
 from datetime import datetime, timedelta
+from utils.classes import BaseGroup
 
 
 '''
@@ -16,7 +17,7 @@ from datetime import datetime, timedelta
     7. duration_stops_sectors - длительность стопов по секторам
     8. quantity_stops_sectors - количество секторов в стопе
 '''
-class Stops:
+class Stops(BaseGroup):
     def __init__(self):
         self.duration_stops_channels = timedelta(0)
         self.cause_stops_channels = ''
@@ -28,7 +29,7 @@ class Stops:
         self.quantity_stops_sectors = 0
         self.logger = Logger('STOPS')
 
-    async def app(self, data, date_start, date_end):
+    async def app(self):
         time_stop = []
         cause_stop = []
         product_names = ''
@@ -36,9 +37,10 @@ class Stops:
         ingredient_names = ''
         ingredient_list = []
         sectors_time_stop = []
-        conn = Connect(data['partner_id'], data['name'])
-        response = await conn.dodo_api(f'https://api.dodois.{data["properties"]}/production/stop-sales-channels',
-                                       data['access'], units=data['uuid'], _from=date_start, to=date_end)
+        conn = Connect(self.data['partner_id'], self.data['name'])
+        response = await conn.dodo_api(f'https://api.dodois.{self.data["properties"]}/production/stop-sales-channels',
+                                       self.data['access'], units=self.data['uuid'],
+                                       _from=self.date_start, to=self.date_end)
         try:
             for channel in response['stopSalesBySalesChannels']:
                 if channel['startedAt'] in time_stop and channel['endedAt'] in time_stop:
@@ -56,10 +58,10 @@ class Stops:
                         cause_stop.append(reason)
             self.cause_stops_channels = '\n'.join(cause_stop)
         except Exception as e:
-            self.logger.error(f'{e} | {data["partner_id"]} | {data["name"]}')
-        response_product = await conn.dodo_api(f'https://api.dodois.{data["properties"]}/'
-                                               f'production/stop-sales-products', data["access"],
-                                               units=data['uuid'], _from=date_start, to=date_end)
+            self.logger.error(f'{e} | {self.data["partner_id"]} | {self.data["name"]}')
+        response_product = await conn.dodo_api(f'https://api.dodois.{self.data["properties"]}/'
+                                               f'production/stop-sales-products', self.data["access"],
+                                               units=self.data['uuid'], _from=self.date_start, to=self.date_end)
         try:
             for product in response_product['stopSalesByProducts']:
                 if product_names != product['productName']:
@@ -71,10 +73,10 @@ class Stops:
                     product_list.append(product['productName'])
             self.list_products_stops = '\n'.join(product_list)
         except Exception as e:
-            self.logger.error(f'{e} | {data["partner_id"]} | {data["name"]}')
-        response_ingredient = await conn.dodo_api(f'https://api.dodois.{data["properties"]}/'
-                                                  f'production/stop-sales-ingredients', data['access'],
-                                                  units=data['uuid'], _from=date_start, to=date_end)
+            self.logger.error(f'{e} | {self.data["partner_id"]} | {self.data["name"]}')
+        response_ingredient = await conn.dodo_api(f'https://api.dodois.{self.data["properties"]}/'
+                                                  f'production/stop-sales-ingredients', self.data['access'],
+                                                  units=self.data['uuid'], _from=self.date_start, to=self.date_end)
         try:
             for ingredient in response_ingredient['stopSalesByIngredients']:
                 if ingredient_names != ingredient['ingredientName']:
@@ -86,10 +88,10 @@ class Stops:
                     ingredient_list.append(ingredient['ingredientName'])
             self.list_ingredients_stops = '\n'.join(ingredient_list)
         except Exception as e:
-            self.logger.error(f'{e} | {data["partner_id"]} | {data["name"]}')
-        response_sector = await conn.dodo_api(f'https://api.dodois.{data["properties"]}/'
-                                              f'delivery/stop-sales-sectors', data['access'],
-                                              units=data['uuid'], _from=date_start, to=date_end)
+            self.logger.error(f'{e} | {self.data["partner_id"]} | {self.data["name"]}')
+        response_sector = await conn.dodo_api(f'https://api.dodois.{self.data["properties"]}/'
+                                              f'delivery/stop-sales-sectors', self.data['access'],
+                                              units=self.data['uuid'], _from=self.date_start, to=self.date_end)
         try:
             for sector in response_sector['stopSalesBySectors']:
                 start_at_sector = datetime.strptime(sector['startedAt'], '%Y-%m-%dT%H:%M:%S')
@@ -99,5 +101,5 @@ class Stops:
                 self.duration_stops_sectors += end_at_sector - start_at_sector
                 self.quantity_stops_sectors += 1
         except Exception as e:
-            self.logger.error(f'{e} | {data["partner_id"]} | {data["name"]}')
-        self.logger.info(f'{data["partner_id"]} | {data["name"]} | OK')
+            self.logger.error(f'{e} | {self.data["partner_id"]} | {self.data["name"]}')
+        self.logger.info(f'{self.data["partner_id"]} | {self.data["name"]} | OK')

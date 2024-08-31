@@ -62,7 +62,7 @@ class Sales(BaseGroup):
         price += product['price']
         return disc, price
 
-    async def app(self, ):
+    async def app(self):
         conn = Connect(self.data['partner_id'], self.data['name'])
         skip = 0
         take = 500

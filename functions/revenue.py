@@ -1,6 +1,7 @@
 from utils.logging import Logger
 from utils.connection import Connect
 from datetime import datetime, timedelta
+from utils.classes import BaseGroup
 
 '''
     Набор метрик с глобал эндпоинта unitinfo/dailyrevenue/:
@@ -16,7 +17,7 @@ from datetime import datetime, timedelta
     10. orders_mobile_app - количество заказов из мобильного приложения
     11. percent_mobile_app - процент заказов из мобильного приложения
 '''
-class Revenue:
+class Revenue(BaseGroup):
     def __init__(self):
         self.revenue = 0
         self.orders = 0
@@ -31,19 +32,19 @@ class Revenue:
         self.percent_mobile_app = 0
         self.logger = Logger('REVENUE')
 
-    async def app(self, data, date_start, date_end):
-        conn = Connect(data['partner_id'], data['name'])
-        properties = data["properties"].split('/')
+    async def app(self):
+        conn = Connect(self.data['partner_id'], self.data['name'])
+        properties = self.data["properties"].split('/')
         concept = properties[1]
         if concept == 'dodopizza':
             concept = ''
         else:
             concept += '.'
-        date_start = datetime.strptime(date_start, '%Y-%m-%dT%H:%M:%S').date()
-        date_end = datetime.strptime(date_end, '%Y-%m-%dT%H:%M:%S').date()
-        while date_start != date_end + timedelta(days=1):
+        date_start = datetime.strptime(self.date_start, '%Y-%m-%dT%H:%M:%S').date()
+        date_end = datetime.strptime(self.date_end, '%Y-%m-%dT%H:%M:%S').date()
+        while date_start != date_end:
             link = f'https://publicapi.{concept}dodois.io/{properties[-1]}/api/v1/unitinfo/' \
-                   f'{data["short_id"]}/dailyrevenue/{date_start.year}/{date_start.month}/{date_start.day}'
+                   f'{self.data["short_id"]}/dailyrevenue/{date_start.year}/{date_start.month}/{date_start.day}'
             response = await conn.public_dodo_api(link)
             try:
                 rev = response['UnitRevenue'][0]
@@ -58,11 +59,11 @@ class Revenue:
                 self.revenue_mobile_app += int(rev['StationaryMobileRevenue'])
                 self.orders_mobile_app += int(rev['StationaryMobileCount'])
             except Exception as e:
-                self.logger.error(f'{e} | {data["partner_id"]} | {data["name"]}')
+                self.logger.error(f'{e} | {self.data["partner_id"]} | {self.data["name"]}')
             date_start += timedelta(days=1)
         try:
             self.percent_mobile_app += round(self.orders_mobile_app / self.orders_stationary * 100, 2)
         except ZeroDivisionError as e:
             self.percent_mobile_app += 0
-            self.logger.error(f'{e} | {data["partner_id"]} | {data["name"]}')
-        self.logger.info(f'{data["partner_id"]} | {data["name"]} | OK')
+            self.logger.error(f'{e} | {self.data["partner_id"]} | {self.data["name"]}')
+        self.logger.info(f'{self.data["partner_id"]} | {self.data["name"]} | OK')

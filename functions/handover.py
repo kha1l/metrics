@@ -1,6 +1,7 @@
 from utils.logging import Logger
 from datetime import timedelta
 from utils.connection import Connect
+from utils.classes import BaseGroup
 
 
 '''
@@ -13,7 +14,7 @@ from utils.connection import Connect
     6. percent_long_orders_stationary - процент долгих заказов в ресторане
     7. percent_long_orders_delivery - процент долгих заказов на доставку
 '''
-class Handover:
+class Handover(BaseGroup):
     def __init__(self):
         self.logger = Logger('HANDOVER')
         self.late_stationary = 0
@@ -24,13 +25,14 @@ class Handover:
         self.percent_long_orders_stationary = 0
         self.percent_long_orders_delivery = 0
 
-    async def app(self, orders_stationary, data, date_start, date_end):
-        conn = Connect(data['partner_id'], data['name'])
+    async def app(self, orders_stationary):
+        conn = Connect(self.data['partner_id'], self.data['name'])
         count_orders_stationary, count_orders_delivery = 0, 0
         amount_meet_stationary, amount_meet_delivery = 0, 0
         amount_assembly_stationary = 0
-        response = await conn.dodo_api(f'https://api.dodois.{data["properties"]}/production/orders-handover-time',
-                                       data["access"], units=data["uuid"], _from=date_start, to=date_end)
+        response = await conn.dodo_api(f'https://api.dodois.{self.data["properties"]}/production/orders-handover-time',
+                                       self.data["access"], units=self.data["uuid"],
+                                       _from=self.date_start, to=self.date_end)
         try:
             for order in response['ordersHandoverTime']:
                 if order['salesChannel'] == 'Dine-in':
@@ -55,22 +57,22 @@ class Handover:
             try:
                 self.percent_late_stationary = round(self.late_stationary / orders_stationary * 100, 2)
             except ZeroDivisionError as e:
-                self.logger.error(f'{e} | {data["partner_id"]} | {data["name"]}')
+                self.logger.error(f'{e} | {self.data["partner_id"]} | {self.data["name"]}')
             try:
                 self.cooking_time_stationary = timedelta(seconds=round(amount_meet_stationary /
                                                                        count_orders_stationary, 0))
             except ZeroDivisionError as e:
-                self.logger.error(f'{e} | {data["partner_id"]} | {data["name"]}')
+                self.logger.error(f'{e} | {self.data["partner_id"]} | {self.data["name"]}')
             try:
                 self.cooking_time_delivery = timedelta(seconds=round(amount_meet_delivery /
                                                                      count_orders_delivery, 0))
             except ZeroDivisionError as e:
-                self.logger.error(f'{e} | {data["partner_id"]} | {data["name"]}')
+                self.logger.error(f'{e} | {self.data["partner_id"]} | {self.data["name"]}')
             try:
                 self.assembly_time_stationary = timedelta(seconds=round(amount_assembly_stationary /
                                                                         count_orders_stationary, 0))
             except ZeroDivisionError as e:
-                self.logger.error(f'{e} | {data["partner_id"]} | {data["name"]}')
-            self.logger.info(f'{data["partner_id"]} | {data["name"]} | OK')
+                self.logger.error(f'{e} | {self.data["partner_id"]} | {self.data["name"]}')
+            self.logger.info(f'{self.data["partner_id"]} | {self.data["name"]} | OK')
         except Exception as e:
-            self.logger.error(f'{e}|{data["partner_id"]}|{data["name"]}')
+            self.logger.error(f'{e}|{self.data["partner_id"]}|{self.data["name"]}')

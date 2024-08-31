@@ -1,6 +1,7 @@
 from utils.logging import Logger
 from utils.connection import Connect
 import operator
+from utils.classes import BaseGroup
 
 
 '''
@@ -12,7 +13,7 @@ import operator
     5. productivity_auto_couriers - производительность авто курьера
     6. productivity_bike_couriers - производительность вело(пешего) курьера
 '''
-class Shifts:
+class Shifts(BaseGroup):
     def __init__(self):
         self.extra_time_work = 0
         self.workload_manager = 0
@@ -22,8 +23,8 @@ class Shifts:
         self.productivity_bike_couriers = 0
         self.logger = Logger('SHIFTS')
 
-    async def app(self, hours, data, date_start, date_end):
-        conn = Connect(data['partner_id'], data['name'])
+    async def app(self, hours):
+        conn = Connect(self.data['partner_id'], self.data['name'])
         kitchen = ['Стажер-менеджер', 'Инструктор', 'Универсал',
                    'Пиццамейкер', 'Кандидат-пиццамейкер', 'Кассир',
                    'Кандидат-кассир']
@@ -41,16 +42,16 @@ class Shifts:
         worked_hours = 0
         reach = False
         while not reach:
-            response = await conn.dodo_api(f'https://api.dodois.{data["properties"]}/staff/shifts',
-                                           data['access'], units=data['uuid'], clockInFrom=date_start,
-                                           clockInTo=date_end, skip=skip, take=take)
+            response = await conn.dodo_api(f'https://api.dodois.{self.data["properties"]}/staff/shifts',
+                                           self.data['access'], units=self.data['uuid'], clockInFrom=self.date_start,
+                                           clockInTo=self.date_end, skip=skip, take=take)
             skip += take
             try:
                 if response['isEndOfListReached']:
                     reach = True
             except Exception as e:
                 reach = True
-                self.logger.error(f'{e} | {data["partner_id"]} | {data["name"]}')
+                self.logger.error(f'{e} | {self.data["partner_id"]} | {self.data["name"]}')
             try:
                 for shift in response['shifts']:
                     staff_type = shift['staffTypeName']
@@ -78,8 +79,8 @@ class Shifts:
                             couriers_bike_hours += work_time
                             couriers_bike_orders += shift['deliveredOrdersCount']
                 person = max(manager_worked_dict.items(), key=operator.itemgetter(1))
-                last_name = await conn.dodo_api(f'https://api.dodois.{data["properties"]}/staff/'
-                                                f'members/{person[0]}', data["access"])
+                last_name = await conn.dodo_api(f'https://api.dodois.{self.data["properties"]}/staff/'
+                                                f'members/{person[0]}', self.data["access"])
                 str_person = str(round(person[1], 2)).replace('.', ',')
                 self.maximum_workload_manager = f'{str_person}-{last_name["lastName"]}'
                 delta_hours = worked_hours - hours
@@ -90,19 +91,19 @@ class Shifts:
                 try:
                     self.workload_kitchen = round(kitchen_hours / len(kitchen_list), 2)
                 except ZeroDivisionError as e:
-                    self.logger.error(f'{e} | {data["partner_id"]} | {data["name"]}')
+                    self.logger.error(f'{e} | {self.data["partner_id"]} | {self.data["name"]}')
                 try:
                     self.workload_manager = round(managers_worked_hours / len(managers_worked_list), 2)
                 except ZeroDivisionError as e:
-                    self.logger.error(f'{e} | {data["partner_id"]} | {data["name"]}')
+                    self.logger.error(f'{e} | {self.data["partner_id"]} | {self.data["name"]}')
                 try:
                     self.productivity_auto_couriers = round(couriers_auto_orders / couriers_auto_hours, 2)
                 except ZeroDivisionError as e:
-                    self.logger.error(f'{e} | {data["partner_id"]} | {data["name"]}')
+                    self.logger.error(f'{e} | {self.data["partner_id"]} | {self.data["name"]}')
                 try:
                     self.productivity_bike_couriers = round(couriers_bike_orders / couriers_bike_hours, 2)
                 except ZeroDivisionError as e:
-                    self.logger.error(f'{e} | {data["partner_id"]} | {data["name"]}')
+                    self.logger.error(f'{e} | {self.data["partner_id"]} | {self.data["name"]}')
             except Exception as e:
-                self.logger.error(f'{e} | {data["partner_id"]} | {data["name"]}')
-        self.logger.info(f'{data["partner_id"]} | {data["name"]} | OK')
+                self.logger.error(f'{e} | {self.data["partner_id"]} | {self.data["name"]}')
+        self.logger.info(f'{self.data["partner_id"]} | {self.data["name"]} | OK')

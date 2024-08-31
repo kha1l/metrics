@@ -1,5 +1,6 @@
 from utils.logging import Logger
 from utils.connection import Connect
+from utils.classes import BaseGroup
 
 
 '''
@@ -15,7 +16,7 @@ from utils.connection import Connect
     9. cost_one_delivery - стоимость одной доставки
     10. salary_staff - зарплата курьеров и кухни
 '''
-class Salary:
+class Salary(BaseGroup):
     def __init__(self):
         self.salary_kitchen = 0
         self.salary_couriers = 0
@@ -29,15 +30,15 @@ class Salary:
         self.salary_staff = 0
         self.logger = Logger('SALARY')
 
-    async def app(self, revenue, revenue_delivery, orders_delivery, data, date_start, date_end):
-        conn = Connect(data['partner_id'], data['name'])
-        response = await conn.dodo_api(f'https://api.dodois.{data["properties"]}/staff/incentives-by-members',
-                                       data["access"], units=data["uuid"],
-                                       _from=date_start, to=date_end)
+    async def app(self, revenue, revenue_delivery, orders_delivery):
+        conn = Connect(self.data['partner_id'], self.data['name'])
+        response = await conn.dodo_api(f'https://api.dodois.{self.data["properties"]}/staff/incentives-by-members',
+                                       self.data["access"], units=self.data["uuid"],
+                                       _from=self.date_start, to=self.date_end)
         try:
             for salary in response['staffMembers']:
-                person = await conn.dodo_api(f'https://api.dodois.{data["properties"]}/staff/'
-                                             f'members/{salary["staffId"]}', data["access"])
+                person = await conn.dodo_api(f'https://api.dodois.{self.data["properties"]}/staff/'
+                                             f'members/{salary["staffId"]}', self.data["access"])
                 staff, position = person['staffType'], person['positionName']
                 for shift in salary['shiftsDetailing']:
                     staff = shift['staffType']
@@ -60,9 +61,9 @@ class Salary:
                         if position.startswith('Стажер-') and position != 'Стажер-менеджер':
                             self.salary_trainee += prem['amount']
         except Exception as e:
-            self.logger.error(f'{e} | {data["partner_id"]} | {data["name"]}')
+            self.logger.error(f'{e} | {self.data["partner_id"]} | {self.data["name"]}')
         try:
-            self.kitchencost = round(self.salary_kitchen * data['tax'] / revenue * 100, 2)
+            self.kitchencost = round(self.salary_kitchen * self.data['tax'] / revenue * 100, 2)
         except ZeroDivisionError:
             self.kitchencost = 0
         try:
@@ -83,4 +84,4 @@ class Salary:
         self.award_couriers = round(self.award_couriers, 0)
         self.award_kitchen = round(self.award_kitchen, 0)
         self.salary_trainee = round(self.salary_trainee, 0)
-        self.logger.info(f'{data["partner_id"]} | {data["name"]} | OK')
+        self.logger.info(f'{self.data["partner_id"]} | {self.data["name"]} | OK')
